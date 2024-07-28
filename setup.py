@@ -16,7 +16,7 @@ setup(
     long_description_content_type="text/markdown",
     long_description=LONG_DESCRIPTION,
     packages=find_packages(),
-    install_requires=['pennylane', 'json', 'ionizer'],
+    install_requires=['pennylane', 'ionizer'],
     keywords=['python', 'quantum', 'pennylane', 'IonQ', 'noisy', 'circuits'],
     classifiers=[
         "Development Status :: 3 - Alpha",
