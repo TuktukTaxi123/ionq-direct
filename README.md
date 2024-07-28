@@ -12,7 +12,7 @@ Unlike the `pennylane-ionq` package, this package stores the job id of all jobs 
 
 ## Installation and Requirements
 
-- Clone this repository or download the `ionq_direct.py` file directly. No external dependencies beyond the standard Python libraries are required.
+- `pip install ionq-direct` or download the `ionq_direct.py` file directly. No external dependencies beyond the standard Python libraries are required.
 - Make a free account on the [IonQ Cloud Portal](cloud.ionq.com) to acquire an API key. This is required for noisy simulator runs.
 
 ## Usage
