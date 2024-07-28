@@ -7,18 +7,22 @@ import ast
 class CreateCircuit():
     """
     Creates a quantum circuit in the IonQ format given a pennylane circuit.
-
-    Args:
-        qnode (qml.qnode): Quantum circuit function with attributed default qubit qnode
-        params (list): List of parameters needed by qnode
-        native (bool): If True, use native gates from the qnode, otherwise use the default gates
     """
     # TODO: Implement native gates
 
     def __init__(self, qnode, params, shots=1000, native=False, 
                  filename='circuit.json', circuit_name='circuit', api_key=''):
         qnode(*[params])
-
+        """
+        Args:
+            qnode (qml.QNode): Circuit with a default qubit qnode dev.
+            params (list): Parameters the circuit takes.
+            shots (int): Number of shots to use in simulation.
+            native (bool): Choose whether to use native gates or not
+            filename (str): File to save the job submission to.
+            circuit_name (str): Name of the circuit.
+            api_key (str): API key.
+        """
         self._submission = None
         self.qtape = qnode.qtape
         self.ionq_circuit = []
@@ -26,6 +30,7 @@ class CreateCircuit():
         self.filename = filename
         self.circuit_name = circuit_name
         self.api_key = api_key
+        self.job = {}
 
         for op in self.qtape.operations:
             if native == False:
@@ -80,22 +85,51 @@ class CreateCircuit():
                 raise Exception("Native gates not implemented yet")
             
     def set_shots(self, shots):
+        """
+        Set the number of shots to use in simulation.
+        
+        Args:
+            shots (int): Number of shots.
+        """
         self.shots = shots
         print("Shots set to", self.shots)
     
     def set_filename(self, filename):
+        """
+        Set the filename to save the job submission to.
+
+        Args:
+            filename (str): Filename.
+        """
         self.filename = filename
         print("Filename set to", self.filename)
     
     def set_circuit_name(self, circuit_name):
+        """
+        Set the name of the circuit.
+        
+        Args:
+            circuit_name (str): Name of the circuit.
+            Name can be used to identify the circuit in the IonQ dashboard.
+        """
         self.circuit_name = circuit_name
         print("Circuit name set to", self.circuit_name)
 
     def set_api_key(self, api_key):
+        """
+        Set the API key to use for submitting the job.
+        
+        Args:
+            api_key (str): API key.
+        """
         self.api_key = api_key
         print("API key set")
 
     def save_job(self):
+        """
+        Save the job submission to a file. 
+        The job submission is saved in JSON format accepted by IonQ.
+        """
         if self.job == {}:
             raise Exception("Job not created yet")
 
@@ -105,6 +139,12 @@ class CreateCircuit():
         print(f"Job submission saved to {self.filename}")
 
     def submit_job(self):
+        """
+        Submit the job to the IonQ API.
+        
+        Returns:
+            dict: Job information result.
+        """
         if self.job == {}:
             raise Exception("Job not created yet")
         if self.api_key == '':
@@ -123,34 +163,65 @@ class CreateCircuit():
         return ast.literal_eval(job_result.text)
 
     def set_native(self, native):
+        """
+        Set whether to use native gates or not.
+        
+        Args:
+            native (bool): True if native gates are to be used.
+            TODO: Implement native gate support. Currently not supported
+        """
         if native == True:
             raise Exception("Native gates not implemented yet")
         self.native = native
         print("Native set to", self.native)
 
 class QPUSubmission(CreateCircuit):
+    """
+    Submits a job to the IonQ QPU.
+    """
 
-    def __init__(self, qnode, params, native=False, debiasing=True, api_key='', target='qpu.aria-1'):
-        super().__init__(qnode, params, native)
+    def __init__(self, qnode, params, shots=1000, native=False, 
+                 filename='circuit.json', circuit_name='circuit', api_key='', target='qpu.aria-1', debiasing=True):
+        """
+        Args:
+            See `CreateCircuit()` for non-qpu specific arguments.
+            Target (str): Target device to run the job on.
+                - Valid devices:
+                    -`qpu.aria-1`
+                    -`qpu.aria-2`
+                    -`qpu.forte`
+            Debiasing (bool): Whether to use error mitigation or not.
+        
+        Note: Sharpening is a post processing error mitigation technique that is called
+        during job retreival. Debiasing must be enabled for sharpening to be used.
+        """
+        super().__init__(qnode, params, shots, native, filename, circuit_name, api_key)
         self.debiasing = debiasing
         self.target = target
-        self.job = {}
-        self.api_key = api_key
-        self.post_url = 'https://api.ionq.co/v0.3/jobs'
     
     def set_debiasing(self, debiasing):
+        """
+        Set whether to use Debiasing or not.
+        """
         self.debiasing = debiasing
         print("Debiasing set to", self.debiasing)
     
     def set_target(self, target):
+        """
+        Set the target device to run the job on.
+
+        Valid devices:
+            -`qpu.aria-1`
+            -`qpu.aria-2`
+            -`qpu.forte`
+        """
         self.target = target
         print("Target set to", self.target)
-    
-    def set_filename(self, filename):
-        self.filename = filename
-        print("Filename set to", self.filename)
 
     def create_job(self):
+        """
+        Create the job submission.
+        """
         self.job = {
             "name": self.circuit_name,
             "shots": self.shots,
@@ -166,52 +237,16 @@ class QPUSubmission(CreateCircuit):
 
 class SimulatorSubmission(CreateCircuit):
 
-    def __init__(self, qnode, params, native=False, shots=1000, 
+    def __init__(self, qnode, params, shots=1000, native=False, 
                  filename='circuit.json', circuit_name='circuit', api_key='', noise_model = 'ideal'):
-        super().__init__(qnode, params, native)
-        self.circuit_name = circuit_name
+        super().__init__(qnode, params, shots, native, filename, circuit_name, api_key)
+
         self.target = 'simulator'
-        self.shots = shots
-        self.job = {}
-
-        self.api_key = api_key
-        self.filename = filename
-        self.post_url = 'https://api.ionq.co/v0.3/jobs'
         self.noise_model = noise_model
-
-    def set_shots(self, shots):
-        self.shots = shots
-        print("Shots set to", self.shots)
     
-    def set_debiasing(self, debiasing):
-        self.debiasing = debiasing
-        print("Debiasing set to", self.debiasing)
-    
-    def set_filename(self, filename):
-        self.filename = filename
-        print("Filename set to", self.filename)
-    
-    def set_circuit_name(self, circuit_name):
-        self.circuit_name = circuit_name
-        print("Circuit name set to", self.circuit_name)
-    
-    def set_api_key(self, api_key):
-        self.api_key = api_key
-        print("API key set")
-    
-    def set_target(self, target):
-        self.target = target
+    def set_noise_model(self, noise_model):
+        self.noise_model = noise_model
         print("Target set to", self.target)
-    
-    def set_native(self, native):
-        if native == True:
-            raise Exception("Native gates not implemented yet")
-        self.native = native
-        print("Native set to", self.native)
-    
-    def set_filename(self, filename):
-        self.filename = filename
-        print("Filename set to", self.filename)
 
     def create_job(self):
         self.job = {
@@ -226,30 +261,3 @@ class SimulatorSubmission(CreateCircuit):
                 "circuit": self.ionq_circuit
             }
         }
-    
-    def save_job(self):
-        if self.job == {}:
-            raise Exception("Job not created yet")
-
-        with open(self.filename, "w") as f:
-            json.dump(self.job, f, indent=2)
-        
-        print(f"Job submission saved to {self.filename}")
-    
-    def submit_job(self):
-        if self.job == {}:
-            raise Exception("Job not created yet")
-        if self.api_key == '':
-            raise Exception("API key not set")
-
-        url = "https://api.ionq.co/v0.3/jobs"
-        headers = {
-            "Authorization": f"apiKey {self.api_key}",
-            "Content-Type": "application/json"
-        }
-        file_path = f'{self.filename}'
-        with open(file_path, 'r') as file:
-            data = file.read()
-        
-        job_result = requests.post(url, headers=headers, data=data)
-        return ast.literal_eval(job_result.text)
