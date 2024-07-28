@@ -2,13 +2,25 @@ import json
 import pennylane as qml
 from pennylane.tape import QuantumTape
 
-class DirectSubmission():
-    def __init__(self, qnode, params, circuit_label, debiasing, shots, filename, native=False):
+class CreateCircuit():
+    """
+    Creates a quantum circuit in the IonQ format given a pennylane circuit.
+
+    Args:
+        qnode (qml.qnode): Quantum circuit function with attributed default qubit qnode
+        params (list): List of parameters needed by qnode
+        native (bool): If True, use native gates from the qnode, otherwise use the default gates
+    """
+    # TODO: Implement native gates
+
+    def __init__(self, qnode, params, native=False):
+        qnode(*params)
+
         self._submission = None
         self.qtape = qnode.qtape
         self.ionq_circuit = []
 
-        for op in qtape.operations:
+        for op in self.qtape.operations:
             if native == False:
                 # arbritrary single qubit rotations
                 if op.name == "RX":
@@ -57,9 +69,78 @@ class DirectSubmission():
                     self.ionq_circuit.append({"gate": "yy", "control": op.wires[0], "target": op.wires[1], "rotation": op.parameters[0]})
                 elif op.name == "ZZ":
                     self.ionq_circuit.append({"gate": "zz", "control": op.wires[0], "target": op.wires[1], "rotation": op.parameters[0]})
+            else:
+                raise Exception("Native gates not implemented yet")
 
-class DirectSubmissionSimulator():
-    def __init__(self, qnode, params, circuit_label, debiasing, shots, filename):
-        self._submission = None
-        self.qtape = qnode.qtape
-        self.ionq_circuit = []
+class QPUSubmission(CreateCircuit):
+
+    def __init__(self, qnode, params, native=False, debiasing=False, shots=1000, 
+                 filename='circuit.json', circuit_name='circuit', api_key='', target='aria-1'):
+        super().__init__(qnode, params, native)
+        self.debiasing = debiasing
+        self.filename = filename
+        self.ciruit_name = circuit_name
+        self.api_key = api_key
+        self.target = target
+        self.job = {}
+
+    def set_shots(self, shots):
+        self.shots = shots
+        print("Shots set to", self.shots)
+    
+    def set_debiasing(self, debiasing):
+        self.debiasing = debiasing
+        print("Debiasing set to", self.debiasing)
+    
+    def set_filename(self, filename):
+        self.filename = filename
+        print("Filename set to", self.filename)
+    
+    def set_circuit_name(self, circuit_name):
+        self.circuit_name = circuit_name
+        print("Circuit name set to", self.circuit_name)
+    
+    def set_api_key(self, api_key):
+        self.api_key = api_key
+        print("API key set")
+    
+    def set_target(self, target):
+        self.target = target
+        print("Target set to", self.target)
+    
+    def set_native(self, native):
+        if native == True:
+            raise Exception("Native gates not implemented yet")
+        self.native = native
+        print("Native set to", self.native)
+    
+    def set_filename(self, filename):
+        self.filename = filename
+        print("Filename set to", self.filename)
+
+    def create_job(self):
+        if self.api_key == '':
+            raise Exception("API key not set")
+        
+        self.job = {
+            "name": self.circuit_name,
+            "shots": self.shots,
+            "target": self.target,
+            "input": {
+                "qubits": len(self.qtape.wires),
+                "circuit": self.ionq_circuit
+            }
+        }
+    
+    def save_job(self):
+        if self.job == {}:
+            raise Exception("Job not created yet")
+
+        with open(self.filename, "w") as f:
+            json.dump(self.job, f, indent=2)
+        
+        print(f"Job submission saved to {self.filename}")
+    
+
+    
+
