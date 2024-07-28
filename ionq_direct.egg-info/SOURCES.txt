@@ -1,0 +1,9 @@
+README.md
+setup.py
+ionq_direct/__init__.py
+ionq_direct/ionq_direct.py
+ionq_direct.egg-info/PKG-INFO
+ionq_direct.egg-info/SOURCES.txt
+ionq_direct.egg-info/dependency_links.txt
+ionq_direct.egg-info/requires.txt
+ionq_direct.egg-info/top_level.txt
