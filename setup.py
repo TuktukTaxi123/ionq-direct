@@ -20,7 +20,7 @@ setup(
     keywords=['python', 'quantum', 'pennylane', 'IonQ', 'noisy', 'circuits'],
     classifiers=[
         "Development Status :: 3 - Alpha",
-        "Intended Audience :: Users that submit quantum circuits to IonQ QPUs",
+        "Intended Audience :: Science/Research",
         "Programming Language :: Python :: 3"
     ]
 )
