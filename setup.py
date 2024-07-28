@@ -19,7 +19,7 @@ setup(
     install_requires=['pennylane', 'json', 'ionizer'],
     keywords=['python', 'quantum', 'pennylane', 'IonQ', 'noisy', 'circuits'],
     classifiers=[
-        "Development Status :: Alpha",
+        "Development Status :: 3 - Alpha",
         "Intended Audience :: Users that submit quantum circuits to IonQ QPUs",
         "Programming Language :: Python :: 3"
     ]
