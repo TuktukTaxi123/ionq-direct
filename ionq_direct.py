@@ -15,12 +15,17 @@ class CreateCircuit():
     """
     # TODO: Implement native gates
 
-    def __init__(self, qnode, params, native=False):
+    def __init__(self, qnode, params, shots=1000, native=False, 
+                 filename='circuit.json', circuit_name='circuit', api_key=''):
         qnode(*[params])
 
         self._submission = None
         self.qtape = qnode.qtape
         self.ionq_circuit = []
+        self.shots = shots
+        self.filename = filename
+        self.circuit_name = circuit_name
+        self.api_key = api_key
 
         for op in self.qtape.operations:
             if native == False:
@@ -73,30 +78,10 @@ class CreateCircuit():
                     self.ionq_circuit.append({"gate": "zz", "targets": [op.wires[0], op.wires[1]], "rotation": op.parameters[0]})
             else:
                 raise Exception("Native gates not implemented yet")
-
-class QPUSubmission(CreateCircuit):
-
-    def __init__(self, qnode, params, native=False, debiasing=True, shots=1000, 
-                 filename='circuit.json', circuit_name='circuit', api_key='', target='qpu.aria-1'):
-        super().__init__(qnode, params, native)
-        self.debiasing = debiasing
-        self.circuit_name = circuit_name
-        self.target = target
-        self.shots = shots
-        self.job = {}
-
-        self.api_key = api_key
-        self.filename = filename
-        self.post_url = 'https://api.ionq.co/v0.3/jobs'
-
-
+            
     def set_shots(self, shots):
         self.shots = shots
         print("Shots set to", self.shots)
-    
-    def set_debiasing(self, debiasing):
-        self.debiasing = debiasing
-        print("Debiasing set to", self.debiasing)
     
     def set_filename(self, filename):
         self.filename = filename
@@ -105,39 +90,11 @@ class QPUSubmission(CreateCircuit):
     def set_circuit_name(self, circuit_name):
         self.circuit_name = circuit_name
         print("Circuit name set to", self.circuit_name)
-    
+
     def set_api_key(self, api_key):
         self.api_key = api_key
         print("API key set")
-    
-    def set_target(self, target):
-        self.target = target
-        print("Target set to", self.target)
-    
-    def set_native(self, native):
-        if native == True:
-            raise Exception("Native gates not implemented yet")
-        self.native = native
-        print("Native set to", self.native)
-    
-    def set_filename(self, filename):
-        self.filename = filename
-        print("Filename set to", self.filename)
 
-    def create_job(self):
-        self.job = {
-            "name": self.circuit_name,
-            "shots": self.shots,
-            "target": self.target,
-            "error_mitigation": {
-                "debias": self.debiasing,
-            },
-            "input": {
-                "qubits": len(self.qtape.wires),
-                "circuit": self.ionq_circuit
-            }
-        }
-    
     def save_job(self):
         if self.job == {}:
             raise Exception("Job not created yet")
@@ -164,6 +121,48 @@ class QPUSubmission(CreateCircuit):
         
         job_result = requests.post(url, headers=headers, data=data)
         return ast.literal_eval(job_result.text)
+
+    def set_native(self, native):
+        if native == True:
+            raise Exception("Native gates not implemented yet")
+        self.native = native
+        print("Native set to", self.native)
+
+class QPUSubmission(CreateCircuit):
+
+    def __init__(self, qnode, params, native=False, debiasing=True, api_key='', target='qpu.aria-1'):
+        super().__init__(qnode, params, native)
+        self.debiasing = debiasing
+        self.target = target
+        self.job = {}
+        self.api_key = api_key
+        self.post_url = 'https://api.ionq.co/v0.3/jobs'
+    
+    def set_debiasing(self, debiasing):
+        self.debiasing = debiasing
+        print("Debiasing set to", self.debiasing)
+    
+    def set_target(self, target):
+        self.target = target
+        print("Target set to", self.target)
+    
+    def set_filename(self, filename):
+        self.filename = filename
+        print("Filename set to", self.filename)
+
+    def create_job(self):
+        self.job = {
+            "name": self.circuit_name,
+            "shots": self.shots,
+            "target": self.target,
+            "error_mitigation": {
+                "debias": self.debiasing,
+            },
+            "input": {
+                "qubits": len(self.qtape.wires),
+                "circuit": self.ionq_circuit
+            }
+        }
 
 class SimulatorSubmission(CreateCircuit):
 
