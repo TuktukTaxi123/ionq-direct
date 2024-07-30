@@ -6,7 +6,7 @@ Unlike the `pennylane-ionq` package, this package stores the job id of all jobs 
 ## Features
 
 - **Circuit Conversion**: Converts quantum circuits into IonQ-compatible JSON format.
-- **Batch Submission**: Retrieves job ID of jobs sent to IonQ devices, allowing for easy batch submission and retreival
+- **Batch Submission and Retrieval**: Retrieves job ID of jobs sent to IonQ devices, allowing for easy batch submission and retrieval
 - **Noise Model Simulator Support**: Allows for easy use of IonQ Noisy Simulators, which is not present in the existing `pennylane-ionq` package
 - **Native Gate Support**: Coming soon. Allows for direct native gate submission
 
@@ -57,3 +57,8 @@ simulator_job.submit_job()
 >> {'id': 'job_id_string',
  'status': 'job_status',
  'request': request_number}
+
+# Retrieve a job
+circuit_result = RetrieveCircuit(api_key = API_KEY, job_id = JOB_ID)
+circuit_result.get_result(debiasing = True)
+>> {job histogram result}
