@@ -175,7 +175,7 @@ class CreateCircuit():
         self.native = native
         print("Native set to", self.native)
 
-class RetreiveCircuit():
+class RetrieveCircuit():
     """Retreives the results of a job from the IonQ API."""
     def __init__(self, api_key, job_id):
         """
