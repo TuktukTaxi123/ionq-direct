@@ -175,6 +175,39 @@ class CreateCircuit():
         self.native = native
         print("Native set to", self.native)
 
+class RetreiveCircuit():
+    """Retreives the results of a job from the IonQ API."""
+    def __init__(self, api_key, job_id):
+        """
+        Args:
+            api_key (str): API key.
+            job_id (str): Job ID.
+        """
+        self.api_key = api_key
+        self.job_id = job_id
+        self.url = f'https://api.ionq.co/v0.3/jobs/{job_id}/results'
+
+        self.headers = {
+            'Authorization': f'apiKey {self.api_key}'
+        }
+    
+    def get_result(self, sharpening=False):
+        """
+        Get the result of the job.
+        
+        Args:
+            sharpening (bool): Whether to use sharpening or not.
+            
+        Returns:
+            dict: Job results.
+        
+        TODO: Implement and check if sharpening condition works
+        """
+        response = requests.request("GET", self.url, 
+                                    headers=self.headers, params=sharpening)
+        return ast.literal_eval(response.text)
+
+
 class QPUSubmission(CreateCircuit):
     """
     Submits a job to the IonQ QPU.
